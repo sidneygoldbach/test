@@ -15,8 +15,10 @@ export default function TestStatus() {
   })
 
   const [logs, setLogs] = useState<string[]>([])
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
+    setIsClient(true)
     checkAllSystems()
   }, [])
 
@@ -52,6 +54,8 @@ export default function TestStatus() {
   }
 
   const checkEnvironment = () => {
+    if (!isClient) return "checking"
+
     try {
       const isLocal = window.location.hostname === "localhost"
       const hasBaseUrl = !!process.env.NEXT_PUBLIC_BASE_URL
@@ -120,6 +124,8 @@ export default function TestStatus() {
   }
 
   const checkQuizFlow = () => {
+    if (!isClient) return "checking"
+
     try {
       // Test localStorage
       const testData = { test: true, timestamp: Date.now() }
@@ -166,12 +172,25 @@ export default function TestStatus() {
     }
   }
 
+  const getStatusText = () => {
+    if (!isClient) return "Carregando..."
+
+    const allSuccess = Object.values(status).every((s) => s === "success")
+    const hasError = Object.values(status).some((s) => s === "error")
+
+    if (allSuccess) return "✅ Todos os sistemas funcionando!"
+    if (hasError) return "❌ Alguns sistemas com problema"
+    return "⚠️ Verificando sistemas..."
+  }
+
   const startQuiz = () => {
+    if (!isClient) return
     addLog("🎯 Redirecionando para o quiz...")
     window.location.href = "/"
   }
 
   const testPayment = () => {
+    if (!isClient) return
     addLog("💳 Redirecionando para teste de pagamento...")
     // Simular dados do quiz
     localStorage.setItem(
@@ -184,6 +203,18 @@ export default function TestStatus() {
       }),
     )
     window.location.href = "/resultado"
+  }
+
+  // Show loading state until client-side hydration
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />
+          <p className="text-xl">Carregando verificação de sistemas...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

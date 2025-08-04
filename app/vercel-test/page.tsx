@@ -11,8 +11,10 @@ export default function VercelTest() {
   const [testResults, setTestResults] = useState<any>({})
   const [isRunning, setIsRunning] = useState(false)
   const [logs, setLogs] = useState<string[]>([])
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
+    setIsClient(true)
     detectEnvironment()
   }, [])
 
@@ -22,6 +24,8 @@ export default function VercelTest() {
   }
 
   const detectEnvironment = () => {
+    if (!isClient) return
+
     const env = {
       isVercel: window.location.hostname.includes("vercel.app") || window.location.hostname.includes("vercel.com"),
       isLocal: window.location.hostname === "localhost",
@@ -130,6 +134,8 @@ export default function VercelTest() {
   }
 
   const testQuizFlow = async () => {
+    if (!isClient) throw new Error("Client not ready")
+
     const testData = {
       score: 12,
       maxScore: 15,
@@ -149,11 +155,13 @@ export default function VercelTest() {
   }
 
   const startQuizOnVercel = () => {
+    if (!isClient) return
     addLog("🎯 Iniciando quiz no servidor Vercel...")
     window.location.href = "/?test=true"
   }
 
   const testPaymentOnVercel = () => {
+    if (!isClient) return
     addLog("💳 Configurando teste de pagamento no Vercel...")
     localStorage.setItem(
       "quizData",
@@ -176,6 +184,18 @@ export default function VercelTest() {
       default:
         return <div className="w-5 h-5 border-2 border-gray-300 rounded-full" />
     }
+  }
+
+  // Show loading state until client-side hydration
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-12 h-12 animate-spin text-purple-500 mx-auto mb-4" />
+          <p className="text-xl">Carregando teste Vercel...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -381,11 +401,6 @@ export default function VercelTest() {
                         rel="noreferrer"
                       >
                         🔧 Debug Stripe
-                      </a>
-                    </li>
-                    <li>
-                      <a href="/test-status" target="_blank" className="text-blue-600 hover:underline" rel="noreferrer">
-                        📊 Status Geral
                       </a>
                     </li>
                     <li>
